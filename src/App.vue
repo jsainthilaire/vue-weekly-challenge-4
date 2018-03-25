@@ -2,7 +2,9 @@
   <div id="app">
     <router-link class="link" to="/">Home</router-link>
     <router-link class="link" to="/task-list">List</router-link>
-    <router-view/>
+    <transition name="slide-fade" mode="out-in">
+      <router-view/>
+    </transition>
   </div>
 </template>
 
@@ -33,5 +35,16 @@ export default {
 
   .link.router-link-exact-active {
     background-color: #616161;
+  }
+
+  .slide-fade-enter-active {
+    transition: all .5s ease;
+  }
+  .slide-fade-leave-active {
+    transition: all 1s cubic-bezier(0.8, 0.8, 0.4, 6.0);
+  }
+  .slide-fade-enter, .slide-fade-leave-to {
+    transform: translateX(200px);
+    opacity: 0;
   }
 </style>
