@@ -1,53 +1,37 @@
 <template>
   <div class="task-list">
     <div class="title">Task List</div>
-    <div class="add-task">
-      <input v-model="newTask.name" placeholder="Todo name">
-      <textarea v-model="newTask.description" placeholder="Todo description"></textarea>
-      <button @click="addTask">Save</button>
-    </div>
+    <AddTask/>
       <div class="content">
         <transition-group name="list" tag="div">
-          <div class="task" v-for="(task, index) in tasks" :class="{ completed: task.done }" v-bind:key="index">
+          <div class="task" v-for="task in tasks" :class="{ completed: task.done }" v-bind:key="task.id">
             <span>{{ task.name }}</span>
-            <button @click="showTask(index)" v-if="selectedId !== index">Show</button>
-            <button @click="deleteTask(index)">Delete</button>
+            <button @click="showTask(task.id)" v-if="selectedId !== task.id">Show</button>
+            <button @click="deleteTaskAndRedirect(task.id)">Delete</button>
           </div>
         </transition-group>
       </div>
-    <router-view :task="selectedTask" v-if="tasks.length > 0"></router-view>
+    <router-view :task="selectedTask" v-if="areThereAnyTask"></router-view>
   </div>
 </template>
 
 <script>
-import { EventBus, TOGGLE_TASK } from './EventBus'
+import AddTask from './AddTask'
+import { mapGetters, mapMutations } from 'vuex'
 
 export default {
   name: 'TaskList',
   created: function () {
-    this.selectedId = parseInt(this.$route && this.$route.params && this.$route.params.id, 10) || 0;
-    EventBus.$on(TOGGLE_TASK, id => {
-      console.log(id)
-      this.tasks[id].done = true
-    })
+    this.selectedId = this.$route && this.$route.params && this.$route.params.id
+
+    if (this.selectedId && !this.areThereAnyTask) {
+      this.$router.push({path: '/task-list/'})
+      this.selectedId = ''
+    }
   },
   data () {
     return {
-      tasks: [{
-        name: 'Task 1',
-        description: 'Project A',
-        done: false
-      }, {
-        name: 'Task 2',
-        description: 'Project A',
-        done: false
-      }],
-      selectedId: 0,
-      newTask: {
-        name: '',
-        description: '',
-        done: false
-      }
+      selectedId: ''
     }
   },
   methods: {
@@ -55,40 +39,42 @@ export default {
       this.selectedId = id
       this.$router.push({ path: `/task-list/${id}` })
     },
-    addTask: function () {
-      this.tasks.push({ ...this.newTask })
-      this.resetNewTask()
-    },
-    resetNewTask: function () {
-      this.newTask = {
-        name: '',
-        description: '',
-        done: false
+    deleteTaskAndRedirect (id) {
+      this.deleteTask(id)
+
+      if (this.$route.params.id === id) {
+        this.redirectToTasksList()
       }
     },
-    deleteTask: function (index) {
-      this.tasks.splice(index, 1)
-      const routeId = this.$route.params.id;
-      if (!(index > routeId) && index !== 0) {
-        this.showTask(routeId - 1)
-      }
-    }
+    redirectToTasksList () {
+      this.$router.push({path: '/task-list/'})
+    },
+    ...mapMutations(['deleteTask'])
   },
   computed: {
     selectedTask: function () {
-      if (this.tasks.length === 0 || this.selectedId < 0) {
+      if (!(this.areThereAnyTask && this.selectedId && this.taskExists(this.selectedId))) {
+        this.redirectToTasksList()
         return
       }
 
-      console.log(this.selectedId)
-      const { name, description, done } = this.tasks[this.selectedId]
+      const { id, name, description, done } = this.tasks.find(task => task.id === this.selectedId)
 
       return {
+        id,
         name,
         description,
         done
       }
-    }
+    },
+    ...mapGetters([
+      'tasks',
+      'areThereAnyTask',
+      'taskExists'
+    ])
+  },
+  components: {
+    AddTask
   }
 }
 </script>

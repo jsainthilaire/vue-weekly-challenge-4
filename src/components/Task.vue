@@ -5,22 +5,20 @@
     </div>
     <div>
       {{ task.name }} - {{ task.description }}
-      <button v-if="!task.done" @click="toggleTask">Set to done</button>
+      <button v-if="!task.done" @click="toggleTask(task.id)">Set to done</button>
       <span v-else> Completed</span>
     </div>
   </div>
 </template>
 
 <script>
-import { EventBus, TOGGLE_TASK } from './EventBus'
+import { mapMutations } from 'vuex'
 
 export default {
   name: 'Task',
   props: ['task'],
   methods: {
-    toggleTask: function () {
-      EventBus.$emit(TOGGLE_TASK, this.$route.params.id)
-    }
+    ...mapMutations(['toggleTask'])
   }
 }
 </script>
