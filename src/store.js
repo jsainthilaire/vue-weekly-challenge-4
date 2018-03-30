@@ -1,8 +1,14 @@
 import Vuex from 'vuex'
 import Vue from 'vue'
+import VuexPersistence from 'vuex-persist'
 import shortid from 'shortid'
 
 Vue.use(Vuex)
+
+const vuexLocal = new VuexPersistence({
+  storage: window.localStorage,
+  key: 'tasks_vuex'
+})
 
 export const store = new Vuex.Store({
   state: {
@@ -32,5 +38,6 @@ export const store = new Vuex.Store({
         state.tasks[indexToToggle].done = true
       }
     }
-  }
+  },
+  plugins: [vuexLocal.plugin]
 })
